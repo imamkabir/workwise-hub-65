@@ -21,7 +21,18 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
-  const [activeTab, setActiveTab] = useState(currentUser === "admin" ? "overview" : "browse");
+  // Determine user role
+  const getUserRole = () => {
+    if (currentUser === "admin") return "admin";
+    if (currentUser === "imamkabir397@gmail.com") {
+      const roleIndicator = localStorage.getItem(`${currentUser}_role`);
+      return roleIndicator || "admin"; // Default to admin if not set
+    }
+    return "user";
+  };
+  
+  const userRole = getUserRole();
+  const [activeTab, setActiveTab] = useState(userRole === "admin" ? "overview" : "browse");
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [userCredits, setUserCredits] = useState(25); // Mock user credits
 
@@ -31,7 +42,17 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
   };
 
   const renderContent = () => {
-    const userRole = currentUser === "admin" ? "admin" : "user";
+    // Determine user role
+    const getUserRole = () => {
+      if (currentUser === "admin") return "admin";
+      if (currentUser === "imamkabir397@gmail.com") {
+        const roleIndicator = localStorage.getItem(`${currentUser}_role`);
+        return roleIndicator || "admin"; // Default to admin if not set
+      }
+      return "user";
+    };
+    
+    const userRole = getUserRole();
     
     switch (activeTab) {
       // Admin routes
@@ -77,7 +98,7 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
         onTabChange={setActiveTab}
         isDarkMode={isDarkMode}
         onToggleTheme={toggleTheme}
-        userRole={currentUser === "admin" ? "admin" : "user"}
+        userRole={userRole}
       />
       <div className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader

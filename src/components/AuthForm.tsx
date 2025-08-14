@@ -40,6 +40,17 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
         return;
       }
 
+      // Admin email bypass
+      if (email === "imamkabir397@gmail.com" && password === "1234") {
+        localStorage.setItem(`${email}_role`, "admin");
+        toast({
+          title: "✅ Welcome Admin!",
+          description: "Redirecting to admin dashboard...",
+        });
+        setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
+        return;
+      }
+
       // Demo user bypass
       if (email === "user" && password === "123") {
         toast({
@@ -47,6 +58,17 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
           description: "Redirecting to user dashboard...",
         });
         setTimeout(() => onLogin("user"), 1000);
+        return;
+      }
+
+      // User email bypass
+      if (email === "imamkabir397@gmail.com" && password === "12345") {
+        localStorage.setItem(`${email}_role`, "user");
+        toast({
+          title: "✅ Welcome User!",
+          description: "Redirecting to user dashboard...",
+        });
+        setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
         return;
       }
 
@@ -206,7 +228,9 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   <strong>Demo Accounts:</strong><br />
                   <span className="text-primary font-medium">Admin:</span> admin | 124<br />
-                  <span className="text-primary font-medium">User:</span> user | 123
+                  <span className="text-primary font-medium">User:</span> user | 123<br />
+                  <span className="text-primary font-medium">Email Admin:</span> imamkabir397@gmail.com | 1234<br />
+                  <span className="text-primary font-medium">Email User:</span> imamkabir397@gmail.com | 12345
                 </p>
               </div>
             </TabsContent>
