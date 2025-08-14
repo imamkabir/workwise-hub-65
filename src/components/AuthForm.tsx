@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { authApi, type LoginResponse } from "@/lib/api";
 
 interface AuthFormProps {
   onLogin: (email: string) => void;
@@ -17,7 +18,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
   const [password, setPassword] = useState("");
   const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent, isLoginMode: boolean) => {
+  const handleSubmit = async (e: React.FormEvent, isLoginMode: boolean) => {
     e.preventDefault();
     
     if (!email || !password || (!isLoginMode && !name)) {
@@ -29,11 +30,12 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       return;
     }
 
+    // Demo accounts (keep for testing when backend is down)
     if (isLoginMode) {
       // Admin bypass
       if (email === "admin" && password === "124") {
         toast({
-          title: "✅ Welcome Admin!",
+          title: "✅ Welcome Admin! (Demo Mode)",
           description: "Redirecting to admin dashboard...",
         });
         setTimeout(() => onLogin("admin"), 1000);
@@ -44,7 +46,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       if (email === "imamkabir397@gmail.com" && password === "1234") {
         localStorage.setItem(`${email}_role`, "admin");
         toast({
-          title: "✅ Welcome Admin!",
+          title: "✅ Welcome Admin! (Demo Mode)",
           description: "Redirecting to admin dashboard...",
         });
         setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
@@ -54,7 +56,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       // Demo user bypass
       if (email === "user" && password === "123") {
         toast({
-          title: "✅ Welcome User!",
+          title: "✅ Welcome User! (Demo Mode)",
           description: "Redirecting to user dashboard...",
         });
         setTimeout(() => onLogin("user"), 1000);
@@ -65,54 +67,123 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       if (email === "imamkabir397@gmail.com" && password === "12345") {
         localStorage.setItem(`${email}_role`, "user");
         toast({
-          title: "✅ Welcome User!",
+          title: "✅ Welcome User! (Demo Mode)",
           description: "Redirecting to user dashboard...",
         });
         setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
         return;
       }
+    }
 
-      // Check localStorage for user
-      const stored = localStorage.getItem(email);
-      if (!stored) {
+    // Real API calls to your backend
+    try {
+      if (isLoginMode) {
+        // Login with your backend
         toast({
-          title: "❌ Account Not Found",
-          description: "No account found with this email!",
-          variant: "destructive",
+          title: "🔐 Signing In",
+          description: "Connecting to backend server...",
         });
-      } else {
-        const userData = JSON.parse(stored);
-        if (userData.password !== password) {
-          toast({
-            title: "❌ Wrong Password",
-            description: "Please check your credentials!",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "✅ Welcome Back!",
-            description: `Welcome back, ${userData.name || userData.email}`,
-          });
-          setTimeout(() => onLogin(userData.email), 1000);
-        }
-      }
-    } else {
-      // Register user
-      if (localStorage.getItem(email)) {
+        
+        const response: LoginResponse = await authApi.login(email, password);
+        
+        // Store auth token and user info
+        localStorage.setItem('authToken', response.token);
+        localStorage.setItem('userRole', response.user.role);
+        localStorage.setItem('userId', response.user.id);
+        localStorage.setItem('userName', response.user.name);
+        
         toast({
-          title: "⚠️ Account Exists",
-          description: "Account already exists with this email!",
-          variant: "destructive",
+          title: "✅ Welcome Back!",
+          description: `Logged in successfully as ${response.user.role}`,
         });
-      } else {
-        localStorage.setItem(email, JSON.stringify({ name, email, password }));
-        toast({
-          title: "✅ Account Created!",
-          description: "You can now login with your credentials.",
-        });
-        setActiveTab("login");
+        
+        setTimeout(() => onLogin(response.user.email), 1000);
+        
+        setEmail("");
         setPassword("");
         setName("");
+      } else {
+        // Sign up with your backend
+        toast({
+          title: "🚀 Creating Account",
+          description: "Connecting to backend server...",
+        });
+        
+        const response = await authApi.signup(email, password, name);
+        
+        toast({
+          title: "✅ Account Created!",
+          description: "You can now sign in with your credentials.",
+        });
+        
+        // Switch to login tab
+        setActiveTab("login");
+        setEmail("");
+        setPassword("");
+        setName("");
+      }
+    } catch (error: any) {
+      console.error("Backend authentication error:", error);
+      
+      // Check if it's a network error (backend not running)
+      if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
+        toast({
+          title: "🔌 Backend Not Connected",
+          description: "Please start your backend server on localhost:8000. Using demo mode for now.",
+          variant: "destructive",
+        });
+        
+        // Fallback to localStorage demo mode for development
+        if (isLoginMode) {
+          const stored = localStorage.getItem(email);
+          if (!stored) {
+            toast({
+              title: "❌ Account Not Found",
+              description: "No account found with this email! (Demo Mode)",
+              variant: "destructive",
+            });
+          } else {
+            const userData = JSON.parse(stored);
+            if (userData.password !== password) {
+              toast({
+                title: "❌ Wrong Password",
+                description: "Please check your credentials! (Demo Mode)",
+                variant: "destructive",
+              });
+            } else {
+              toast({
+                title: "✅ Welcome Back!",
+                description: `Welcome back, ${userData.name || userData.email} (Demo Mode)`,
+              });
+              setTimeout(() => onLogin(userData.email), 1000);
+            }
+          }
+        } else {
+          // Register in localStorage for demo
+          if (localStorage.getItem(email)) {
+            toast({
+              title: "⚠️ Account Exists",
+              description: "Account already exists with this email! (Demo Mode)",
+              variant: "destructive",
+            });
+          } else {
+            localStorage.setItem(email, JSON.stringify({ name, email, password }));
+            toast({
+              title: "✅ Account Created!",
+              description: "You can now login with your credentials. (Demo Mode)",
+            });
+            setActiveTab("login");
+            setPassword("");
+            setName("");
+          }
+        }
+      } else {
+        // Backend returned an error (invalid credentials, etc.)
+        toast({
+          title: "❌ Authentication Failed",
+          description: error.message || "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
       }
     }
   };
@@ -226,7 +297,8 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
               
               <div className="mt-4 p-4 glass rounded-lg border border-primary/20">
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                  <strong>Demo Accounts:</strong><br />
+                  <strong>🔌 Backend Integration:</strong> Live API calls to localhost:8000<br />
+                  <strong>Demo Accounts (fallback):</strong><br />
                   <span className="text-primary font-medium">Admin:</span> admin | 124<br />
                   <span className="text-primary font-medium">User:</span> user | 123<br />
                   <span className="text-primary font-medium">Email Admin:</span> imamkabir397@gmail.com | 1234<br />
