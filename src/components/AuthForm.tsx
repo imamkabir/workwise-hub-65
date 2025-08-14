@@ -32,9 +32,19 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       if (email === "admin" && password === "124") {
         toast({
           title: "✅ Welcome Admin!",
-          description: "Redirecting to dashboard...",
+          description: "Redirecting to admin dashboard...",
         });
         setTimeout(() => onLogin("admin"), 1000);
+        return;
+      }
+
+      // Demo user bypass
+      if (email === "user" && password === "123") {
+        toast({
+          title: "✅ Welcome User!",
+          description: "Redirecting to user dashboard...",
+        });
+        setTimeout(() => onLogin("user"), 1000);
         return;
       }
 
@@ -142,8 +152,9 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
           {isLogin && (
             <div className="mt-4 p-3 glass rounded-lg">
               <p className="text-xs text-muted-foreground text-center">
-                <strong>Demo Login:</strong><br />
-                Email: admin | Password: 124
+                <strong>Demo Accounts:</strong><br />
+                Admin: admin | 124<br />
+                User: user | 123
               </p>
             </div>
           )}

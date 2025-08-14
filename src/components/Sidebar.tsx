@@ -1,4 +1,4 @@
-import { Home, BarChart3, FolderOpen, User, Settings, Sun, Moon } from "lucide-react";
+import { Home, BarChart3, FolderOpen, User, Settings, Sun, Moon, Upload, Users, FileText, CreditCard, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -7,24 +7,37 @@ interface SidebarProps {
   onTabChange: (tab: string) => void;
   isDarkMode: boolean;
   onToggleTheme: () => void;
+  userRole: string;
 }
 
-const navigation = [
-  { id: "overview", label: "Overview", icon: Home },
+const adminNavigation = [
+  { id: "overview", label: "Dashboard", icon: Home },
+  { id: "upload", label: "Upload Files", icon: Upload },
+  { id: "files", label: "Manage Files", icon: FileText },
+  { id: "users", label: "Users", icon: Users },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "projects", label: "Projects", icon: FolderOpen },
   { id: "profile", label: "Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export const Sidebar = ({ activeTab, onTabChange, isDarkMode, onToggleTheme }: SidebarProps) => {
+const userNavigation = [
+  { id: "browse", label: "Browse Files", icon: FolderOpen },
+  { id: "downloads", label: "My Downloads", icon: Download },
+  { id: "credits", label: "Earn Credits", icon: CreditCard },
+  { id: "profile", label: "Profile", icon: User },
+  { id: "settings", label: "Settings", icon: Settings },
+];
+
+export const Sidebar = ({ activeTab, onTabChange, isDarkMode, onToggleTheme, userRole }: SidebarProps) => {
+  const navigation = userRole === "admin" ? adminNavigation : userNavigation;
+
   return (
     <aside className="w-64 h-screen glass border-r border-border/50 flex flex-col">
       <div className="p-6 border-b border-border/50">
         <div className="flex items-center space-x-3">
           <div className="text-2xl">🌀</div>
           <h2 className="text-xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-            Iconic Lite
+            IconicShare
           </h2>
         </div>
       </div>

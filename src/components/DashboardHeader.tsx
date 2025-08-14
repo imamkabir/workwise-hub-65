@@ -19,14 +19,20 @@ interface DashboardHeaderProps {
 
 export const DashboardHeader = ({ currentUser, activeTab, onLogout, onTabChange }: DashboardHeaderProps) => {
   const getTabTitle = () => {
-    switch (activeTab) {
-      case "overview": return "Overview";
-      case "analytics": return "Analytics";
-      case "projects": return "Projects";
-      case "profile": return "Profile";
-      case "settings": return "Settings";
-      default: return "Dashboard";
-    }
+    const titles: { [key: string]: string } = {
+      overview: "Dashboard",
+      upload: "Upload Files",
+      files: "Manage Files", 
+      users: "User Management",
+      analytics: "Analytics",
+      browse: "Browse Files",
+      downloads: "My Downloads",
+      credits: "Earn Credits",
+      projects: "Projects",
+      profile: "Profile",
+      settings: "Settings"
+    };
+    return titles[activeTab] || "Dashboard";
   };
 
   const getWelcomeMessage = () => {
