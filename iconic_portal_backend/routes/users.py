@@ -48,6 +48,13 @@ async def update_profile(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Prevent admin role changes
+    if current_user.role == "admin" and current_user.email != "imamkabir397@gmail.com":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Unauthorized admin account"
+        )
+    
     # Check if email is already taken by another user
     existing_user = db.query(User).filter(
         User.email == user_update.email,
@@ -58,6 +65,13 @@ async def update_profile(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Email already taken"
+        )
+    
+    # Prevent email change for the main admin
+    if current_user.email == "imamkabir397@gmail.com" and user_update.email != "imamkabir397@gmail.com":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot change admin email address"
         )
     
     # Update user

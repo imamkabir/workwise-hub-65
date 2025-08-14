@@ -30,50 +30,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       return;
     }
 
-    // Demo accounts (keep for testing when backend is down)
-    if (isLoginMode) {
-      // Admin bypass
-      if (email === "admin" && password === "124") {
-        toast({
-          title: "✅ Welcome Admin! (Demo Mode)",
-          description: "Redirecting to admin dashboard...",
-        });
-        setTimeout(() => onLogin("admin"), 1000);
-        return;
-      }
-
-      // Admin email bypass
-      if (email === "imamkabir397@gmail.com" && password === "1234") {
-        localStorage.setItem(`${email}_role`, "admin");
-        toast({
-          title: "✅ Welcome Admin! (Demo Mode)",
-          description: "Redirecting to admin dashboard...",
-        });
-        setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
-        return;
-      }
-
-      // Demo user bypass
-      if (email === "user" && password === "123") {
-        toast({
-          title: "✅ Welcome User! (Demo Mode)",
-          description: "Redirecting to user dashboard...",
-        });
-        setTimeout(() => onLogin("user"), 1000);
-        return;
-      }
-
-      // User email bypass
-      if (email === "imamkabir397@gmail.com" && password === "12345") {
-        localStorage.setItem(`${email}_role`, "user");
-        toast({
-          title: "✅ Welcome User! (Demo Mode)",
-          description: "Redirecting to user dashboard...",
-        });
-        setTimeout(() => onLogin("imamkabir397@gmail.com"), 1000);
-        return;
-      }
-    }
+    // No hardcoded demo accounts - all authentication through backend
 
     // Real API calls to your backend
     try {
@@ -298,11 +255,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
               <div className="mt-4 p-4 glass rounded-lg border border-primary/20">
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   <strong>🔌 Backend Integration:</strong> Live API calls to localhost:8000<br />
-                  <strong>Demo Accounts (fallback):</strong><br />
-                  <span className="text-primary font-medium">Admin:</span> admin | 124<br />
-                  <span className="text-primary font-medium">User:</span> user | 123<br />
-                  <span className="text-primary font-medium">Email Admin:</span> imamkabir397@gmail.com | 1234<br />
-                  <span className="text-primary font-medium">Email User:</span> imamkabir397@gmail.com | 12345
+                  <strong>Security:</strong> Rate limited, IP tracking, admin notifications
                 </p>
               </div>
             </TabsContent>

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
@@ -12,6 +12,12 @@ from auth import (
     get_password_hash, 
     ACCESS_TOKEN_EXPIRE_MINUTES,
     generate_referral_code
+)
+from security import (
+    limiter, 
+    log_ip_address, 
+    track_login_attempt, 
+    send_admin_notification
 )
 
 router = APIRouter()
@@ -32,7 +38,8 @@ class Token(BaseModel):
     user: dict
 
 @router.post("/signup", response_model=dict)
-async def signup(user_data: UserSignup, db: Session = Depends(get_db)):
+@limiter.limit("3/minute")
+async def signup(request: Request, user_data: UserSignup, db: Session = Depends(get_db)):
     # Check if user already exists
     db_user = db.query(User).filter(User.email == user_data.email).first()
     if db_user:
@@ -73,14 +80,36 @@ async def signup(user_data: UserSignup, db: Session = Depends(get_db)):
     }
 
 @router.post("/login", response_model=Token)
-async def login(user_data: UserLogin, db: Session = Depends(get_db)):
-    user = authenticate_user(db, user_data.email, user_data.password)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+@limiter.limit("5/minute")
+async def login(request: Request, user_data: UserLogin, db: Session = Depends(get_db)):
+    # Get client IP
+    client_ip = request.client.host
+    
+    # Check rate limiting and track attempt
+    try:
+        user = authenticate_user(db, user_data.email, user_data.password)
+        if not user:
+            # Log failed attempt
+            log_ip_address(client_ip, user_data.email, "failed_login")
+            track_login_attempt(client_ip, False)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Incorrect email or password",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        # Log successful attempt
+        log_ip_address(client_ip, user_data.email, "successful_login")
+        track_login_attempt(client_ip, True)
+        
+        # Check for suspicious activity (multiple IPs)
+        suspicious = log_ip_address(client_ip, user_data.email, "login_tracking")
+        if suspicious:
+            # Could invalidate existing tokens here if needed
+            pass
+    except HTTPException as e:
+        # Re-raise HTTP exceptions (like rate limit)
+        raise e
     
     if not user.is_active:
         raise HTTPException(
@@ -92,6 +121,10 @@ async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
+    
+    # Send admin notification if admin login
+    if user.role == "admin":
+        send_admin_notification(user.email, client_ip)
     
     return {
         "access_token": access_token,
@@ -110,35 +143,5 @@ async def logout():
     # For JWT tokens, logout is handled on the frontend by removing the token
     return {"message": "Successfully logged out"}
 
-# Admin route to create admin users
-@router.post("/create-admin")
-async def create_admin(admin_data: UserSignup, db: Session = Depends(get_db)):
-    # Check if user already exists
-    db_user = db.query(User).filter(User.email == admin_data.email).first()
-    if db_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Create admin user
-    hashed_password = get_password_hash(admin_data.password)
-    referral_code = generate_referral_code(admin_data.email)
-    
-    admin_user = User(
-        name=admin_data.name,
-        email=admin_data.email,
-        hashed_password=hashed_password,
-        role="admin",
-        referral_code=referral_code,
-        credits=1000  # Admins get more credits
-    )
-    
-    db.add(admin_user)
-    db.commit()
-    db.refresh(admin_user)
-    
-    return {
-        "message": "Admin account created successfully",
-        "user_id": admin_user.id
-    }
+# Admin route removed - admin can only be created via setup script
+# This prevents any API-based admin creation for security

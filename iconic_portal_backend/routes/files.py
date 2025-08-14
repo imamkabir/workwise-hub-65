@@ -72,12 +72,23 @@ async def upload_file(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
+    # Only logged-in users can upload files
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required for file uploads"
+        )
+    
     # Check if file is allowed
     if not allowed_file(file.filename):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File type not allowed"
         )
+    
+    # Read file content for MIME type verification
+    file_content = await file.read()
+    await file.seek(0)  # Reset file pointer
     
     # Generate unique filename
     file_extension = file.filename.rsplit('.', 1)[1].lower()

@@ -21,12 +21,19 @@ interface DashboardProps {
 }
 
 export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
-  // Determine user role
+  // Determine user role from backend token
   const getUserRole = () => {
+    // Get role from stored backend response
+    const storedRole = localStorage.getItem('userRole');
+    if (storedRole) {
+      return storedRole;
+    }
+    
+    // Fallback logic for demo mode
     if (currentUser === "admin") return "admin";
     if (currentUser === "imamkabir397@gmail.com") {
       const roleIndicator = localStorage.getItem(`${currentUser}_role`);
-      return roleIndicator || "admin"; // Default to admin if not set
+      return roleIndicator || "user"; // Default to user for security
     }
     return "user";
   };
