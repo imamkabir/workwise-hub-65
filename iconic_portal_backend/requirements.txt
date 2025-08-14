@@ -9,4 +9,4 @@ pydantic[email]==2.5.0
 slowapi==0.1.9
 python-magic==0.4.27
 fastapi-csrf-protect==0.3.4
-python-multipart==0.0.6
+requests==2.31.0

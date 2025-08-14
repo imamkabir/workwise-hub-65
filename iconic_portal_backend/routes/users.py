@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr
 from typing import List
@@ -6,6 +6,8 @@ from typing import List
 from database import get_db
 from models import User, CreditTransaction, Download, File
 from auth import get_current_user, get_current_admin
+from audit_logger import audit_logger
+from session_manager import get_current_admin_with_session_check
 
 router = APIRouter()
 
@@ -139,12 +141,26 @@ async def get_user_downloads(
         for d in downloads
     ]
 
-# Admin routes
+# Admin routes with enhanced security
 @router.get("/admin/users")
 async def get_all_users(
-    admin_user: User = Depends(get_current_admin),
+    request: Request,
+    admin_user: User = Depends(get_current_admin_with_session_check),
     db: Session = Depends(get_db)
 ):
+    # Log admin action
+    client_ip = request.client.host
+    audit_logger.log_action(
+        db=db,
+        user_id=admin_user.id,
+        user_email=admin_user.email,
+        user_role=admin_user.role,
+        action="view_all_users",
+        ip_address=client_ip,
+        resource_type="user",
+        details={"action": "list_users"}
+    )
+    
     users = db.query(User).all()
     return [
         {
@@ -163,7 +179,8 @@ async def get_all_users(
 async def update_user_credits(
     user_id: str,
     credits: int,
-    admin_user: User = Depends(get_current_admin),
+    request: Request,
+    admin_user: User = Depends(get_current_admin_with_session_check),
     db: Session = Depends(get_db)
 ):
     user = db.query(User).filter(User.id == user_id).first()
@@ -182,6 +199,25 @@ async def update_user_credits(
         amount=credits - old_credits,
         transaction_type="admin_adjustment",
         description=f"Credit adjustment by admin {admin_user.name}"
+    )
+    
+    # Log admin action
+    client_ip = request.client.host
+    audit_logger.log_action(
+        db=db,
+        user_id=admin_user.id,
+        user_email=admin_user.email,
+        user_role=admin_user.role,
+        action="update_user_credits",
+        ip_address=client_ip,
+        resource_type="user",
+        resource_id=user_id,
+        details={
+            "target_user_email": user.email,
+            "old_credits": old_credits,
+            "new_credits": credits,
+            "credit_change": credits - old_credits
+        }
     )
     
     db.add(transaction)

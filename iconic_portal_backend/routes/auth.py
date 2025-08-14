@@ -19,6 +19,9 @@ from security import (
     track_login_attempt, 
     send_admin_notification
 )
+from audit_logger import audit_logger
+from webhook_alerts import alert_admin_login, alert_failed_login
+from session_manager import create_admin_session, track_admin_activity
 
 router = APIRouter()
 
@@ -92,6 +95,21 @@ async def login(request: Request, user_data: UserLogin, db: Session = Depends(ge
             # Log failed attempt
             log_ip_address(client_ip, user_data.email, "failed_login")
             track_login_attempt(client_ip, False)
+            
+            # Send webhook alert for failed login
+            alert_failed_login(user_data.email, client_ip, 1)  # Track failed attempts in future
+            
+            # Log failed login in audit
+            audit_logger.log_action(
+                db=db,
+                user_id="unknown",
+                user_email=user_data.email,
+                user_role="unknown",
+                action="failed_login",
+                ip_address=client_ip,
+                details={"login_method": "password", "success": False, "reason": "invalid_credentials"}
+            )
+            
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
@@ -102,11 +120,28 @@ async def login(request: Request, user_data: UserLogin, db: Session = Depends(ge
         log_ip_address(client_ip, user_data.email, "successful_login")
         track_login_attempt(client_ip, True)
         
-        # Check for suspicious activity (multiple IPs)
-        suspicious = log_ip_address(client_ip, user_data.email, "login_tracking")
-        if suspicious:
-            # Could invalidate existing tokens here if needed
-            pass
+    # Check for suspicious activity and send alerts
+    suspicious = log_ip_address(client_ip, user_data.email, "login_tracking")
+    
+    # Send admin notification and webhook alert if admin login
+    if user.role == "admin":
+        send_admin_notification(user.email, client_ip)
+        alert_admin_login(user.email, client_ip, new_ip=suspicious)
+        
+        # Create admin session for timeout tracking
+        user_agent = request.headers.get("user-agent", "Unknown")
+        create_admin_session(user.id, client_ip, user_agent)
+    
+    # Log successful login in audit
+    audit_logger.log_action(
+        db=db,
+        user_id=user.id,
+        user_email=user.email,
+        user_role=user.role,
+        action="user_login",
+        ip_address=client_ip,
+        details={"login_method": "password", "success": True}
+    )
     except HTTPException as e:
         # Re-raise HTTP exceptions (like rate limit)
         raise e

@@ -11,11 +11,37 @@ from slowapi.errors import RateLimitExceeded
 from database import engine, SessionLocal, Base, get_db
 from routes import auth, users, files, credits, referrals
 from security import limiter, add_security_headers
+from backup_manager import create_database_backup
+from audit_logger import AuditLog
+from webhook_alerts import webhook_notifier, alert_database_backup
+from session_manager import cleanup_expired_sessions
+import asyncio
+import logging
 
 # Load environment variables
 load_dotenv()
 
-# Create database tables
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler('server.log'),
+        logging.StreamHandler()
+    ]
+)
+
+# Create database backup on startup
+print("🔄 Starting Iconic Portal...")
+backup_path = create_database_backup()
+if backup_path:
+    print(f"✅ Database backup created: {backup_path}")
+    alert_database_backup(backup_path, True)
+else:
+    print("⚠️ Database backup failed or no database found")
+    alert_database_backup("N/A", False)
+
+# Create database tables (including new audit log table)
 Base.metadata.create_all(bind=engine)
 
 # Initialize FastAPI app
@@ -69,7 +95,60 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy"}
+    from datetime import datetime
+    # Cleanup expired sessions on health check
+    expired_count = cleanup_expired_sessions()
+    return {
+        "status": "healthy",
+        "expired_sessions_cleaned": expired_count,
+        "uptime": datetime.now().isoformat()
+    }
+
+# Add admin session management endpoints
+@app.get("/admin/sessions")
+async def get_admin_sessions():
+    """Get active admin sessions - for monitoring"""
+    from session_manager import get_active_admin_sessions
+    return {
+        "active_sessions": get_active_admin_sessions(),
+        "session_timeout_minutes": int(os.getenv("ADMIN_SESSION_TIMEOUT", 30))
+    }
+
+@app.post("/admin/test-webhooks")
+async def test_webhooks():
+    from datetime import datetime
+    """Test webhook configurations"""
+    results = webhook_notifier.test_webhooks()
+    return {
+        "webhook_test_results": results,
+        "timestamp": datetime.now().isoformat()
+    }
+
+# Scheduled cleanup task
+async def periodic_cleanup():
+    """Run periodic cleanup tasks"""
+    while True:
+        try:
+            expired_count = cleanup_expired_sessions()
+            if expired_count > 0:
+                logging.info(f"Cleaned up {expired_count} expired admin sessions")
+            await asyncio.sleep(300)  # Run every 5 minutes
+        except Exception as e:
+            logging.error(f"Periodic cleanup error: {str(e)}")
+            await asyncio.sleep(60)  # Wait 1 minute before retrying
+
+# Start background tasks
+@app.on_event("startup")
+async def startup_event():
+    """Start background tasks on server startup"""
+    asyncio.create_task(periodic_cleanup())
+    logging.info("🚀 Iconic Portal started successfully with enhanced security features")
+    print("🚀 Server started with:")
+    print("   💾 Automatic database backups")
+    print("   🔐 Admin session timeout")
+    print("   📝 Audit logging")
+    print("   🚨 Webhook alerts")
+    print("   ⏰ Periodic cleanup tasks")
 
 if __name__ == "__main__":
     import uvicorn
