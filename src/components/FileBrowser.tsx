@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { FileDetailsModal } from "./FileDetailsModal";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,8 @@ export const FileBrowser = ({ userCredits, onCreditUpdate }: FileBrowserProps) =
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [sortBy, setSortBy] = useState("newest");
+  const [selectedFile, setSelectedFile] = useState<any>(null);
+  const [showFileDetails, setShowFileDetails] = useState(false);
   const { toast } = useToast();
 
   const getFileIcon = (type: string) => {
@@ -266,50 +269,17 @@ export const FileBrowser = ({ userCredits, onCreditUpdate }: FileBrowserProps) =
 
                 {/* Actions */}
                 <div className="flex gap-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="flex-1 glass">
-                        <Eye className="w-4 h-4 mr-2" />
-                        Preview
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="glass max-w-4xl">
-                      <DialogHeader>
-                        <DialogTitle>{file.title}</DialogTitle>
-                        <DialogDescription>{file.description}</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="flex flex-wrap gap-2">
-                          {file.tags.map((tag) => (
-                            <Badge key={tag} variant="secondary">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                        <div className="bg-muted/50 rounded-lg p-8 text-center">
-                          {getFileIcon(file.type)}
-                          <p className="text-lg font-semibold mt-4">{file.title}</p>
-                          <p className="text-muted-foreground">{file.type} • {file.size}</p>
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Preview would be shown here
-                          </p>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <div className="text-sm text-muted-foreground">
-                            Credits required: {file.credits}
-                          </div>
-                          <Button 
-                            onClick={() => handleDownload(file)}
-                            disabled={userCredits < file.credits}
-                            className="gradient-primary glow"
-                          >
-                            <Download className="w-4 h-4 mr-2" />
-                            Download ({file.credits} credits)
-                          </Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                  <Button 
+                    variant="outline" 
+                    className="flex-1 glass"
+                    onClick={() => {
+                      setSelectedFile(file);
+                      setShowFileDetails(true);
+                    }}
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    View Details
+                  </Button>
                   <Button 
                     onClick={() => handleDownload(file)}
                     disabled={userCredits < file.credits}
@@ -335,6 +305,21 @@ export const FileBrowser = ({ userCredits, onCreditUpdate }: FileBrowserProps) =
             </p>
           </CardContent>
         </Card>
+      )}
+
+      {/* File Details Modal */}
+      {selectedFile && (
+        <FileDetailsModal
+          file={selectedFile}
+          isOpen={showFileDetails}
+          onClose={() => {
+            setShowFileDetails(false);
+            setSelectedFile(null);
+          }}
+          userCredits={userCredits}
+          onCreditUpdate={onCreditUpdate}
+          onDownload={handleDownload}
+        />
       )}
     </div>
   );

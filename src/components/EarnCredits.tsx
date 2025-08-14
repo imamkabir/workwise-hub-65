@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { AdWatchModal } from "./AdWatchModal";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +16,7 @@ interface EarnCreditsProps {
 export const EarnCredits = ({ userCredits, onCreditUpdate }: EarnCreditsProps) => {
   const [referralCode] = useState("ICONIC2024USER");
   const [copied, setCopied] = useState(false);
-  const [watchingAd, setWatchingAd] = useState(false);
+  const [showAdModal, setShowAdModal] = useState(false);
   const { toast } = useToast();
 
   const copyReferralCode = () => {
@@ -38,16 +39,7 @@ export const EarnCredits = ({ userCredits, onCreditUpdate }: EarnCreditsProps) =
   };
 
   const handleWatchAd = () => {
-    setWatchingAd(true);
-    // Simulate ad viewing
-    setTimeout(() => {
-      setWatchingAd(false);
-      onCreditUpdate(userCredits + 2);
-      toast({
-        title: "✅ Ad Completed!",
-        description: "You earned 2 credits for watching the ad.",
-      });
-    }, 3000);
+    setShowAdModal(true);
   };
 
   const creditPackages = [
@@ -176,16 +168,10 @@ export const EarnCredits = ({ userCredits, onCreditUpdate }: EarnCreditsProps) =
                 <Button 
                   className="w-full"
                   onClick={handleWatchAd}
-                  disabled={watchingAd}
                   variant="outline"
                 >
-                  {watchingAd ? "Watching Ad..." : "Watch Ad"}
+                  Watch Ad
                 </Button>
-                {watchingAd && (
-                  <div className="text-sm text-muted-foreground">
-                    Ad will complete in 3 seconds...
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
@@ -270,6 +256,14 @@ export const EarnCredits = ({ userCredits, onCreditUpdate }: EarnCreditsProps) =
           </Card>
         </div>
       </div>
+
+      {/* Ad Watch Modal */}
+      <AdWatchModal
+        isOpen={showAdModal}
+        onClose={() => setShowAdModal(false)}
+        userCredits={userCredits}
+        onCreditUpdate={onCreditUpdate}
+      />
     </div>
   );
 };

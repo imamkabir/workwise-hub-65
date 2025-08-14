@@ -1,4 +1,4 @@
-import { Home, BarChart3, FolderOpen, User, Settings, Sun, Moon, Upload, Users, FileText, CreditCard, Download } from "lucide-react";
+import { Home, BarChart3, FolderOpen, User, Settings, Sun, Moon, Upload, Users, FileText, CreditCard, Download, UserCheck, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -24,6 +24,8 @@ const userNavigation = [
   { id: "browse", label: "Browse Files", icon: FolderOpen },
   { id: "downloads", label: "My Downloads", icon: Download },
   { id: "credits", label: "Earn Credits", icon: CreditCard },
+  { id: "referrals", label: "Referrals", icon: UserCheck },
+  { id: "transactions", label: "Transactions", icon: History },
   { id: "profile", label: "Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },
 ];

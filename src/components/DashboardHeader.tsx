@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { LogOut, ChevronDown } from "lucide-react";
+import { NotificationCenter } from "./NotificationCenter";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +29,8 @@ export const DashboardHeader = ({ currentUser, activeTab, onLogout, onTabChange 
       browse: "Browse Files",
       downloads: "My Downloads",
       credits: "Earn Credits",
+      referrals: "Referral Dashboard",
+      transactions: "Transaction History",
       projects: "Projects",
       profile: "Profile",
       settings: "Settings"
@@ -52,6 +55,7 @@ export const DashboardHeader = ({ currentUser, activeTab, onLogout, onTabChange 
       </div>
       
       <div className="flex items-center space-x-4">
+        <NotificationCenter userRole={currentUser === "admin" ? "admin" : "user"} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center space-x-2 glass">

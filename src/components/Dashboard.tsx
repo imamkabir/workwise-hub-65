@@ -12,6 +12,8 @@ import { UserManagement } from "./UserManagement";
 import { FileBrowser } from "./FileBrowser";
 import { EarnCredits } from "./EarnCredits";
 import { UserDownloads } from "./UserDownloads";
+import { ReferralDashboard } from "./ReferralDashboard";
+import { TransactionHistory } from "./TransactionHistory";
 
 interface DashboardProps {
   currentUser: string;
@@ -51,6 +53,10 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
         return <UserDownloads />;
       case "credits":
         return <EarnCredits userCredits={userCredits} onCreditUpdate={setUserCredits} />;
+      case "referrals":
+        return <ReferralDashboard userCredits={userCredits} onCreditUpdate={setUserCredits} />;
+      case "transactions":
+        return <TransactionHistory userCredits={userCredits} />;
         
       // Common routes
       case "projects":
