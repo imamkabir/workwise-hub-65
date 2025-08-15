@@ -35,7 +35,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
     const demoAccounts = {
       superAdmin: {
         email: "imamkabir397@gmail.com",
-        password: "1234",
+        password: "1234567890", // Updated to match requirements
         name: "Super Admin",
         role: "super_admin"
       },
@@ -262,7 +262,7 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
               <div className="mt-4 p-4 glass rounded-lg border border-primary/20">
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
                   <strong>🔐 Demo Access:</strong><br />
-                  Super Admin: imamkabir397@gmail.com / 1234<br />
+                  Super Admin: imamkabir397@gmail.com / 1234567890<br />
                   User: imamkabir63@gmail.com / 1234
                 </p>
               </div>

@@ -10,17 +10,19 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create Super Admin (CANNOT BE DELETED)
-        $superAdmin = User::create([
-            'name' => env('SUPER_ADMIN_NAME', 'Imam Kabir'),
-            'email' => env('SUPER_ADMIN_EMAIL', 'imamkabir397@gmail.com'),
-            'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', '1234567890')),
-            'credits' => 10000,
-            'email_verified_at' => now(),
-            'is_super_admin' => true,
-            'can_be_deleted' => false,
-            'last_activity' => now(),
-        ]);
+        // Create Super Admin (CANNOT BE DELETED) - Always exists
+        $superAdmin = User::updateOrCreate(
+            ['email' => env('SUPER_ADMIN_EMAIL', 'imamkabir397@gmail.com')],
+            [
+                'name' => env('SUPER_ADMIN_NAME', 'Imam Kabir'),
+                'password' => Hash::make(env('SUPER_ADMIN_PASSWORD', '1234567890')),
+                'credits' => 10000,
+                'email_verified_at' => now(),
+                'is_super_admin' => true,
+                'can_be_deleted' => false,
+                'last_activity' => now(),
+            ]
+        );
         $superAdmin->assignRole('super_admin');
 
         // Create Demo Admin

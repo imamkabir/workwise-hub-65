@@ -14,6 +14,7 @@ import { EarnCredits } from "./EarnCredits";
 import { UserDownloads } from "./UserDownloads";
 import { ReferralDashboard } from "./ReferralDashboard";
 import { TransactionHistory } from "./TransactionHistory";
+import { SuperAdminDashboard } from "./SuperAdminDashboard";
 
 interface DashboardProps {
   currentUser: string;
@@ -38,7 +39,13 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
   };
   
   const userRole = getUserRole();
-  const [activeTab, setActiveTab] = useState(userRole === "super_admin" || userRole === "admin" ? "overview" : "browse");
+  
+  // If user is Super Admin, show dedicated Super Admin dashboard
+  if (userRole === "super_admin") {
+    return <SuperAdminDashboard currentUser={currentUser} onLogout={onLogout} />;
+  }
+  
+  const [activeTab, setActiveTab] = useState(userRole === "admin" ? "overview" : "browse");
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [userCredits, setUserCredits] = useState(25); // Mock user credits
 
@@ -83,7 +90,7 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
       case "settings":
         return <Settings isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
       default:
-        return (userRole === "super_admin" || userRole === "admin") ? <Overview currentUser={currentUser} /> : <FileBrowser userCredits={userCredits} onCreditUpdate={setUserCredits} />;
+        return (userRole === "admin") ? <Overview currentUser={currentUser} /> : <FileBrowser userCredits={userCredits} onCreditUpdate={setUserCredits} />;
     }
   };
 
