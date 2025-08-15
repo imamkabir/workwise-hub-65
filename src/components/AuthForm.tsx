@@ -30,20 +30,52 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
       return;
     }
 
-    // No hardcoded demo accounts - all authentication through backend
+    // Hardcoded demo accounts that always work
+    const demoAccounts = {
+      admin: {
+        email: "imamkabir397@gmail.com",
+        password: "234",
+        name: "Admin User",
+        role: "super_admin"
+      },
+      user: {
+        email: "imamkabir397@gmail.com", 
+        password: "123",
+        name: "Regular User",
+        role: "user"
+      }
+    };
 
-    // Real API calls to your backend
+    // Check demo accounts first
+    const adminMatch = email === demoAccounts.admin.email && password === demoAccounts.admin.password;
+    const userMatch = email === demoAccounts.user.email && password === demoAccounts.user.password;
+
+    if (isLoginMode && (adminMatch || userMatch)) {
+      const account = adminMatch ? demoAccounts.admin : demoAccounts.user;
+      
+      // Store demo credentials
+      localStorage.setItem('userRole', account.role);
+      localStorage.setItem('userId', '1');
+      localStorage.setItem('userName', account.name);
+      localStorage.setItem('authToken', 'demo-token-' + account.role);
+      
+      toast({
+        title: "✅ Welcome!",
+        description: `Logged in as ${account.role}`,
+      });
+      
+      setTimeout(() => onLogin(account.email), 500);
+      setEmail("");
+      setPassword("");
+      setName("");
+      return;
+    }
+
+    // Try backend if available, but don't show backend errors prominently
     try {
       if (isLoginMode) {
-        // Login with your backend
-        toast({
-          title: "🔐 Signing In",
-          description: "Connecting to backend server...",
-        });
-        
         const response: LoginResponse = await authApi.login(email, password);
         
-        // Store auth token and user info
         localStorage.setItem('authToken', response.token);
         localStorage.setItem('userRole', response.user.role);
         localStorage.setItem('userId', response.user.id);
@@ -51,96 +83,70 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
         
         toast({
           title: "✅ Welcome Back!",
-          description: `Logged in successfully as ${response.user.role}`,
+          description: `Logged in successfully`,
         });
         
-        setTimeout(() => onLogin(response.user.email), 1000);
-        
+        setTimeout(() => onLogin(response.user.email), 500);
         setEmail("");
         setPassword("");
         setName("");
       } else {
-        // Sign up with your backend
-        toast({
-          title: "🚀 Creating Account",
-          description: "Connecting to backend server...",
-        });
-        
-        const response = await authApi.signup(email, password, name);
+        await authApi.signup(email, password, name);
         
         toast({
           title: "✅ Account Created!",
           description: "You can now sign in with your credentials.",
         });
         
-        // Switch to login tab
         setActiveTab("login");
         setEmail("");
         setPassword("");
         setName("");
       }
     } catch (error: any) {
-      console.error("Backend authentication error:", error);
-      
-      // Check if it's a network error (backend not running)
-      if (error.message.includes('fetch') || error.message.includes('Failed to fetch')) {
-        toast({
-          title: "🔌 Backend Not Connected",
-          description: "Please start your backend server on localhost:8000. Using demo mode for now.",
-          variant: "destructive",
-        });
-        
-        // Fallback to localStorage demo mode for development
-        if (isLoginMode) {
-          const stored = localStorage.getItem(email);
-          if (!stored) {
-            toast({
-              title: "❌ Account Not Found",
-              description: "No account found with this email! (Demo Mode)",
-              variant: "destructive",
-            });
-          } else {
-            const userData = JSON.parse(stored);
-            if (userData.password !== password) {
-              toast({
-                title: "❌ Wrong Password",
-                description: "Please check your credentials! (Demo Mode)",
-                variant: "destructive",
-              });
-            } else {
-              toast({
-                title: "✅ Welcome Back!",
-                description: `Welcome back, ${userData.name || userData.email} (Demo Mode)`,
-              });
-              setTimeout(() => onLogin(userData.email), 1000);
-            }
-          }
+      // Fallback to localStorage for development
+      if (isLoginMode) {
+        const stored = localStorage.getItem(email);
+        if (!stored) {
+          toast({
+            title: "❌ Invalid Credentials",
+            description: "Please check your email and password.",
+            variant: "destructive",
+          });
         } else {
-          // Register in localStorage for demo
-          if (localStorage.getItem(email)) {
+          const userData = JSON.parse(stored);
+          if (userData.password !== password) {
             toast({
-              title: "⚠️ Account Exists",
-              description: "Account already exists with this email! (Demo Mode)",
+              title: "❌ Wrong Password",
+              description: "Please check your credentials.",
               variant: "destructive",
             });
           } else {
-            localStorage.setItem(email, JSON.stringify({ name, email, password }));
             toast({
-              title: "✅ Account Created!",
-              description: "You can now login with your credentials. (Demo Mode)",
+              title: "✅ Welcome Back!",
+              description: `Welcome back, ${userData.name || userData.email}`,
             });
-            setActiveTab("login");
-            setPassword("");
-            setName("");
+            setTimeout(() => onLogin(userData.email), 500);
           }
         }
       } else {
-        // Backend returned an error (invalid credentials, etc.)
-        toast({
-          title: "❌ Authentication Failed",
-          description: error.message || "Invalid credentials. Please try again.",
-          variant: "destructive",
-        });
+        // Register in localStorage for demo
+        if (localStorage.getItem(email)) {
+          toast({
+            title: "⚠️ Account Exists",
+            description: "Account already exists with this email.",
+            variant: "destructive",
+          });
+        } else {
+          localStorage.setItem(email, JSON.stringify({ name, email, password }));
+          toast({
+            title: "✅ Account Created!",
+            description: "You can now login with your credentials.",
+          });
+          setActiveTab("login");
+          setPassword("");
+          setName("");
+        }
       }
     }
   };
@@ -156,18 +162,12 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
       <Card className="w-full max-w-md glass border-primary/20">
         <CardHeader className="text-center space-y-4">
-          <div className="w-20 h-20 mx-auto mb-2">
-            <img 
-              src="/src/assets/iconic-portal-mascot.png" 
-              alt="Iconic Portal Mascot" 
-              className="w-full h-full object-contain animate-pulse"
-            />
-          </div>
+          <div className="text-4xl mb-2">🌀</div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
             Iconic Portal
           </CardTitle>
           <CardDescription className="text-muted-foreground text-base">
-            Your premium content platform with enterprise-grade security
+            Your gateway to premium content
           </CardDescription>
         </CardHeader>
         
@@ -260,8 +260,9 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
               
               <div className="mt-4 p-4 glass rounded-lg border border-primary/20">
                 <p className="text-xs text-muted-foreground text-center leading-relaxed">
-                  <strong>🔌 Backend Integration:</strong> Live API calls to localhost:8000<br />
-                  <strong>Security:</strong> Rate limited, IP tracking, admin notifications
+                  <strong>🔐 Demo Access:</strong><br />
+                  Admin: imamkabir397@gmail.com / 234<br />
+                  User: imamkabir397@gmail.com / 123
                 </p>
               </div>
             </TabsContent>
