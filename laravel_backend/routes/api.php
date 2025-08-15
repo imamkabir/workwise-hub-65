@@ -59,10 +59,39 @@ Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         // Credit management (requires credits.grant permission)
         Route::post('credits/grant', [CreditController::class, 'grant']);
         
-        // Super admin only routes
+        // Super admin only routes (Bruce Wayne Mode)
         Route::middleware('role:super_admin')->group(function () {
             Route::post('users/create-admin', [AdminController::class, 'createAdmin']);
             Route::put('users/{user}/role', [AdminController::class, 'updateUserRole']);
+            
+            // Bruce Wayne Features
+            Route::get('activity-feed', [SuperAdminController::class, 'activityFeed']);
+            Route::get('online-users', [SuperAdminController::class, 'onlineUsers']);
+            Route::post('users/{user}/force-logout', [SuperAdminController::class, 'forceLogout']);
+            Route::get('system-settings', [SuperAdminController::class, 'getSystemSettings']);
+            Route::post('system-settings', [SuperAdminController::class, 'updateSystemSetting']);
+            Route::get('system-status', [SuperAdminController::class, 'systemStatus']);
+            Route::get('audit-logs', [SuperAdminController::class, 'auditLogs']);
+            Route::get('failed-logins', [SuperAdminController::class, 'failedLogins']);
+            Route::post('notifications/global', [SuperAdminController::class, 'createGlobalNotification']);
+            Route::post('maintenance-mode/toggle', [SuperAdminController::class, 'toggleMaintenanceMode']);
+            Route::post('backup/create', [SuperAdminController::class, 'createBackup']);
+            Route::get('feature-toggles', [SuperAdminController::class, 'getFeatureToggles']);
+            Route::post('feature-toggles', [SuperAdminController::class, 'toggleFeature']);
+        });
+    });
+
+    // System routes
+    Route::prefix('system')->group(function () {
+        Route::get('settings', [SystemController::class, 'publicSettings']);
+        Route::get('health', [SystemController::class, 'healthCheck']);
+        
+        // Authenticated system routes
+        Route::middleware('auth:sanctum')->group(function () {
+            Route::get('notifications', [SystemController::class, 'notifications']);
+            Route::post('notifications/{notification}/read', [SystemController::class, 'markNotificationRead']);
+            Route::post('notifications/read-all', [SystemController::class, 'markAllNotificationsRead']);
+            Route::post('online-status', [SystemController::class, 'updateOnlineStatus']);
         });
     });
 });

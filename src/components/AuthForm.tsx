@@ -156,12 +156,18 @@ export const AuthForm = ({ onLogin }: AuthFormProps) => {
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background to-secondary/20">
       <Card className="w-full max-w-md glass border-primary/20">
         <CardHeader className="text-center space-y-4">
-          <div className="text-4xl mb-2">🌀</div>
+          <div className="w-20 h-20 mx-auto mb-2">
+            <img 
+              src="/src/assets/iconic-portal-mascot.png" 
+              alt="Iconic Portal Mascot" 
+              className="w-full h-full object-contain animate-pulse"
+            />
+          </div>
           <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-blue-400 bg-clip-text text-transparent">
-            Iconic Lite
+            Iconic Portal
           </CardTitle>
           <CardDescription className="text-muted-foreground text-base">
-            Your gateway to premium past questions & answers
+            Your premium content platform with enterprise-grade security
           </CardDescription>
         </CardHeader>
         

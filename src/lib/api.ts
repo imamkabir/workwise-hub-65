@@ -1,7 +1,7 @@
 // API configuration and service functions
 const API_BASE_URL = process.env.NODE_ENV === 'production' 
   ? 'https://your-backend-domain.com' 
-  : 'http://localhost:8000'; // Adjust port if your backend uses different port
+  : 'http://localhost:8000/api'; // Laravel API endpoints
 
 // API client with error handling
 class ApiClient {

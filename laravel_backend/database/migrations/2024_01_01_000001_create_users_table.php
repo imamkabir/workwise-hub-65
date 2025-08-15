@@ -15,6 +15,17 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->integer('credits')->default(25);
+            $table->boolean('is_super_admin')->default(false);
+            $table->boolean('can_be_deleted')->default(true);
+            $table->boolean('is_online')->default(false);
+            $table->timestamp('last_activity')->nullable();
+            $table->string('last_ip_address')->nullable();
+            $table->text('user_agent')->nullable();
+            $table->json('login_history')->nullable();
+            $table->boolean('two_factor_enabled')->default(false);
+            $table->string('two_factor_secret')->nullable();
+            $table->integer('failed_login_attempts')->default(0);
+            $table->timestamp('locked_until')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
