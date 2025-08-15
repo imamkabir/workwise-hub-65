@@ -29,17 +29,16 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
       return storedRole;
     }
     
-    // Fallback logic for demo mode
-    if (currentUser === "admin") return "admin";
+    // Fallback logic for demo mode - Super Admin check first
     if (currentUser === "imamkabir397@gmail.com") {
-      const roleIndicator = localStorage.getItem(`${currentUser}_role`);
-      return roleIndicator || "user"; // Default to user for security
+      return "super_admin"; // Always super admin for this email
     }
+    if (currentUser === "admin") return "admin";
     return "user";
   };
   
   const userRole = getUserRole();
-  const [activeTab, setActiveTab] = useState(userRole === "admin" ? "overview" : "browse");
+  const [activeTab, setActiveTab] = useState(userRole === "super_admin" || userRole === "admin" ? "overview" : "browse");
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [userCredits, setUserCredits] = useState(25); // Mock user credits
 
@@ -49,17 +48,7 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
   };
 
   const renderContent = () => {
-    // Determine user role
-    const getUserRole = () => {
-      if (currentUser === "admin") return "admin";
-      if (currentUser === "imamkabir397@gmail.com") {
-        const roleIndicator = localStorage.getItem(`${currentUser}_role`);
-        return roleIndicator || "admin"; // Default to admin if not set
-      }
-      return "user";
-    };
-    
-    const userRole = getUserRole();
+    // Use the same role detection as above
     
     switch (activeTab) {
       // Admin routes
@@ -94,7 +83,7 @@ export const Dashboard = ({ currentUser, onLogout }: DashboardProps) => {
       case "settings":
         return <Settings isDarkMode={isDarkMode} onToggleTheme={toggleTheme} />;
       default:
-        return userRole === "admin" ? <Overview currentUser={currentUser} /> : <FileBrowser userCredits={userCredits} onCreditUpdate={setUserCredits} />;
+        return (userRole === "super_admin" || userRole === "admin") ? <Overview currentUser={currentUser} /> : <FileBrowser userCredits={userCredits} onCreditUpdate={setUserCredits} />;
     }
   };
 
