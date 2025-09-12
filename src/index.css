@@ -2,13 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import futuristic styles */
+@import './styles/futuristic.css';
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    /* Smart Attendance Portal Design System */
+    /* Futuristic Portal Design System */
     --background: 240 10% 8%;
     --foreground: 0 0% 98%;
 
@@ -39,7 +42,7 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Smart Attendance Portal Custom Colors */
+    /* Futuristic Portal Custom Colors */
     --portal-bg: linear-gradient(135deg, 240 10% 8%, 260 8% 12%);
     --glass-bg: hsla(240, 8%, 12%, 0.8);
     --glass-border: hsla(0, 0%, 100%, 0.1);
@@ -54,6 +57,15 @@ All colors MUST be HSL.
     
     --shadow-glow: 0 0 40px hsla(188, 100%, 42%, 0.3);
     --shadow-card: 0 8px 32px hsla(0, 0%, 0%, 0.5);
+
+    /* Futuristic Effects */
+    --neon-cyan: 0 0 20px hsla(188, 100%, 42%, 0.8);
+    --neon-purple: 0 0 20px hsla(271, 91%, 65%, 0.8);
+    --neon-pink: 0 0 20px hsla(330, 81%, 60%, 0.8);
+    --hologram-bg: linear-gradient(45deg, hsla(188, 100%, 42%, 0.1), hsla(271, 91%, 65%, 0.1));
+    --quantum-glow: 0 0 30px hsla(188, 100%, 42%, 0.6), 0 0 60px hsla(271, 91%, 65%, 0.4);
+    --cyber-border: linear-gradient(45deg, hsl(188 100% 42%), hsl(271 91% 65%), hsl(330 81% 60%));
+    --matrix-green: hsl(120, 100%, 50%);
 
     --sidebar-background: 240 8% 10%;
     --sidebar-foreground: 0 0% 95%;
@@ -111,12 +123,14 @@ All colors MUST be HSL.
 @layer base {
   * {
     @apply border-border;
+    cursor: none;
   }
 
   body {
     @apply bg-background text-foreground;
     background: linear-gradient(135deg, hsl(var(--background)), hsl(240 8% 12%));
     min-height: 100vh;
+    font-family: 'Orbitron', monospace;
   }
   
   .glass {
@@ -132,5 +146,35 @@ All colors MUST be HSL.
   
   .glow {
     box-shadow: var(--shadow-glow);
+  }
+  
+  .neon-cyan {
+    box-shadow: var(--neon-cyan);
+  }
+  
+  .neon-purple {
+    box-shadow: var(--neon-purple);
+  }
+  
+  .neon-pink {
+    box-shadow: var(--neon-pink);
+  }
+  
+  .hologram {
+    background: var(--hologram-bg);
+    backdrop-filter: blur(20px);
+  }
+  
+  .quantum-glow {
+    box-shadow: var(--quantum-glow);
+  }
+  
+  .cyber-border {
+    border-image: var(--cyber-border) 1;
+  }
+  
+  .matrix-text {
+    color: var(--matrix-green);
+    text-shadow: 0 0 10px var(--matrix-green);
   }
 }
