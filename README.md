@@ -1,4 +1,4 @@
-# WELCOME SIR IMAM KABIR
+# Welcome to your Lovable project
 
 ## Project info
 
@@ -8,9 +8,9 @@
 
 There are several ways of editing your application.
 
+**Use Lovable**
 
-
-Simply visit the  and start prompting.
+Simply visit the [Lovable Project](https://lovable.dev/projects/88308251-f384-4182-82af-6f591f9e2c49) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
